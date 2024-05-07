@@ -3,7 +3,7 @@
         'name' => 'laravel/laravel',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => 'a48f39bf4b5c8bbdefc2e34df9dbc2a3cecb8146',
+        'reference' => '62862a0d007e86ce0ef8cb061580336af57639bd',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -263,9 +263,9 @@
             'dev_requirement' => true,
         ),
         'ensi/laravel-openapi-server-generator' => array(
-            'pretty_version' => '3.0.1',
-            'version' => '3.0.1.0',
-            'reference' => '8965d5eb73e35f4239f3d0cfeffcc8ab744edb50',
+            'pretty_version' => '3.0.2',
+            'version' => '3.0.2.0',
+            'reference' => '131b284fdd2f8218e107b196b25e69367e853bdc',
             'type' => 'library',
             'install_path' => __DIR__ . '/../ensi/laravel-openapi-server-generator',
             'aliases' => array(),
@@ -754,7 +754,7 @@
         'laravel/laravel' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => 'a48f39bf4b5c8bbdefc2e34df9dbc2a3cecb8146',
+            'reference' => '62862a0d007e86ce0ef8cb061580336af57639bd',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -1305,8 +1305,8 @@
         'psr/log-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '1.0|2.0|3.0',
-                1 => '3.0.0',
+                0 => '3.0.0',
+                1 => '1.0|2.0|3.0',
             ),
         ),
         'psr/simple-cache' => array(

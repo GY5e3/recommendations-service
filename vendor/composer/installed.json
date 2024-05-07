@@ -1906,17 +1906,17 @@
         },
         {
             "name": "ensi/laravel-openapi-server-generator",
-            "version": "3.0.1",
-            "version_normalized": "3.0.1.0",
+            "version": "3.0.2",
+            "version_normalized": "3.0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ensi-platform/laravel-openapi-server-generator.git",
-                "reference": "8965d5eb73e35f4239f3d0cfeffcc8ab744edb50"
+                "reference": "131b284fdd2f8218e107b196b25e69367e853bdc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ensi-platform/laravel-openapi-server-generator/zipball/8965d5eb73e35f4239f3d0cfeffcc8ab744edb50",
-                "reference": "8965d5eb73e35f4239f3d0cfeffcc8ab744edb50",
+                "url": "https://api.github.com/repos/ensi-platform/laravel-openapi-server-generator/zipball/131b284fdd2f8218e107b196b25e69367e853bdc",
+                "reference": "131b284fdd2f8218e107b196b25e69367e853bdc",
                 "shasum": ""
             },
             "require": {
@@ -1932,7 +1932,7 @@
                 "php-parallel-lint/php-var-dump-check": "^0.5.0",
                 "spatie/laravel-ray": "^1.23"
             },
-            "time": "2023-09-14T11:12:40+00:00",
+            "time": "2023-10-06T08:40:01+00:00",
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1962,7 +1962,7 @@
             ],
             "support": {
                 "issues": "https://github.com/ensi-platform/laravel-openapi-server-generator/issues",
-                "source": "https://github.com/ensi-platform/laravel-openapi-server-generator/tree/3.0.1"
+                "source": "https://github.com/ensi-platform/laravel-openapi-server-generator/tree/3.0.2"
             },
             "install-path": "../ensi/laravel-openapi-server-generator"
         },

@@ -12,7 +12,7 @@ final class GeneratedConfig
 	public const EXTENSIONS = array (
   'nesbot/carbon' => 
   array (
-    'install_path' => '/home/miet/Documents/repos/php-laravel/recommendations-service/vendor/nesbot/carbon',
+    'install_path' => '/home/gy5e3/PhpstormProjects/recommendations-service/vendor/nesbot/carbon',
     'relative_install_path' => '../../../nesbot/carbon',
     'extra' => 
     array (
@@ -25,7 +25,7 @@ final class GeneratedConfig
   ),
   'nunomaduro/larastan' => 
   array (
-    'install_path' => '/home/miet/Documents/repos/php-laravel/recommendations-service/vendor/nunomaduro/larastan',
+    'install_path' => '/home/gy5e3/PhpstormProjects/recommendations-service/vendor/nunomaduro/larastan',
     'relative_install_path' => '../../../nunomaduro/larastan',
     'extra' => 
     array (
@@ -38,7 +38,7 @@ final class GeneratedConfig
   ),
   'spaze/phpstan-disallowed-calls' => 
   array (
-    'install_path' => '/home/miet/Documents/repos/php-laravel/recommendations-service/vendor/spaze/phpstan-disallowed-calls',
+    'install_path' => '/home/gy5e3/PhpstormProjects/recommendations-service/vendor/spaze/phpstan-disallowed-calls',
     'relative_install_path' => '../../../spaze/phpstan-disallowed-calls',
     'extra' => 
     array (

@@ -50,7 +50,8 @@
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "Database\\Seeders\\": "database/seeders/",
+            "App\\Http\\ApiV1\\OpenApiGenerated\\": "app/Http/ApiV1/OpenApiGenerated/"
         }
     },
     "autoload-dev": {

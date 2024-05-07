@@ -10,4 +10,5 @@ class FoosController
     {
         throw new ModelNotFoundException('Foo');
     }
+
 }
