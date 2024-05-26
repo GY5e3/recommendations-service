@@ -256,7 +256,7 @@ yield  from  baz();
      * {@inheritdoc}
      *
      * Must run before BracesFixer, FunctionDeclarationFixer, NullableTypeDeclarationFixer.
-     * Must run after ModernizeStrposFixer.
+     * Must run after ArraySyntaxFixer, ModernizeStrposFixer.
      */
     public function getPriority(): int
     {
@@ -345,12 +345,29 @@ yield  from  baz();
                 continue;
             }
 
-            if ($token->isGivenKind(T_CONST) && $this->isMultilineConstant($tokens, $index)) {
+            if ($token->isGivenKind(T_CONST) && $this->isMultilineCommaSeparatedConstant($tokens, $index)) {
                 continue;
             }
 
             if ($token->isComment() || $token->isGivenKind(CT::T_ATTRIBUTE_CLOSE)) {
                 if ($tokens[$whitespaceTokenIndex]->equals([T_WHITESPACE]) && str_contains($tokens[$whitespaceTokenIndex]->getContent(), "\n")) {
+                    continue;
+                }
+            }
+
+            if ($tokens[$whitespaceTokenIndex]->isWhitespace() && str_contains($tokens[$whitespaceTokenIndex]->getContent(), "\n")) {
+                $nextNextToken = $tokens[$whitespaceTokenIndex + 1];
+                if (\defined('T_ATTRIBUTE')) { // @TODO: drop condition and else when PHP 8.0+ is required
+                    if ($nextNextToken->isGivenKind(T_ATTRIBUTE)) {
+                        continue;
+                    }
+                } else {
+                    if ($nextNextToken->isComment() && str_starts_with($nextNextToken->getContent(), '#[')) {
+                        continue;
+                    }
+                }
+
+                if ($nextNextToken->isGivenKind(T_DOC_COMMENT)) {
                     continue;
                 }
             }
@@ -367,17 +384,17 @@ yield  from  baz();
 
         return new FixerConfigurationResolver([
             (new FixerOptionBuilder('constructs_contain_a_single_space', 'List of constructs which must contain a single space.'))
-                ->setAllowedTypes(['array'])
+                ->setAllowedTypes(['string[]'])
                 ->setAllowedValues([new AllowedValueSubset($tokenMapContainASingleSpaceKeys)])
                 ->setDefault($tokenMapContainASingleSpaceKeys)
                 ->getOption(),
             (new FixerOptionBuilder('constructs_preceded_by_a_single_space', 'List of constructs which must be preceded by a single space.'))
-                ->setAllowedTypes(['array'])
+                ->setAllowedTypes(['string[]'])
                 ->setAllowedValues([new AllowedValueSubset($tokenMapPrecededByASingleSpaceKeys)])
                 ->setDefault($tokenMapPrecededByASingleSpaceKeys)
                 ->getOption(),
             (new FixerOptionBuilder('constructs_followed_by_a_single_space', 'List of constructs which must be followed by a single space.'))
-                ->setAllowedTypes(['array'])
+                ->setAllowedTypes(['string[]'])
                 ->setAllowedValues([new AllowedValueSubset($tokenMapFollowedByASingleSpaceKeys)])
                 ->setDefault($tokenMapFollowedByASingleSpaceKeys)
                 ->getOption(),
@@ -440,11 +457,27 @@ yield  from  baz();
         return false;
     }
 
-    private function isMultilineConstant(Tokens $tokens, int $index): bool
+    private function isMultilineCommaSeparatedConstant(Tokens $tokens, int $constantIndex): bool
     {
-        $scopeEnd = $tokens->getNextTokenOfKind($index, [';', [T_CLOSE_TAG]]) - 1;
-        $hasMoreThanOneConstant = null !== $tokens->findSequence([new Token(',')], $index + 1, $scopeEnd);
+        $isMultilineConstant = false;
+        $hasMoreThanOneConstant = false;
+        $index = $constantIndex;
+        while (!$tokens[$index]->equalsAny([';', [T_CLOSE_TAG]])) {
+            ++$index;
 
-        return $hasMoreThanOneConstant && $tokens->isPartialCodeMultiline($index, $scopeEnd);
+            $isMultilineConstant = $isMultilineConstant || str_contains($tokens[$index]->getContent(), "\n");
+
+            if ($tokens[$index]->equals(',')) {
+                $hasMoreThanOneConstant = true;
+            }
+
+            $blockType = Tokens::detectBlockType($tokens[$index]);
+
+            if (null !== $blockType && true === $blockType['isStart']) {
+                $index = $tokens->findBlockEnd($blockType['type'], $index);
+            }
+        }
+
+        return $hasMoreThanOneConstant && $isMultilineConstant;
     }
 }

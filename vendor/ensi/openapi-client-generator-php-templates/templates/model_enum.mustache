@@ -23,7 +23,7 @@ class {{classname}}
     public static function getDescriptions(): array
     {
         return [
-            {{#allowableValues}}{{#enumVars}}self::{{{name}}} => '{{#enumDescription}}{{enumDescription}}{{/enumDescription}}',{{^-last}}
+            {{#allowableValues}}{{#enumVars}}self::{{{name}}} => '{{#enumDescription}}{{{enumDescription}}}{{/enumDescription}}',{{^-last}}
             {{/-last}}{{/enumVars}}{{/allowableValues}}
         ];
     }

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\Properties;
+namespace Larastan\Larastan\Properties;
 
 use Illuminate\Database\Eloquent\Collection;
-use NunoMaduro\Larastan\Support\HigherOrderCollectionProxyHelper;
+use Larastan\Larastan\Support\HigherOrderCollectionProxyHelper;
 use PHPStan\Analyser\OutOfClassScope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\PropertiesClassReflectionExtension;
@@ -26,7 +26,7 @@ final class HigherOrderCollectionProxyPropertyExtension implements PropertiesCla
 
     public function getProperty(
         ClassReflection $classReflection,
-        string $propertyName
+        string $propertyName,
     ): PropertyReflection {
         $activeTemplateTypeMap = $classReflection->getActiveTemplateTypeMap();
 
@@ -49,21 +49,13 @@ final class HigherOrderCollectionProxyPropertyExtension implements PropertiesCla
 
         $returnType = $this->higherOrderCollectionProxyHelper->determineReturnType($methodType->getValue(), $modelType, $propertyType, $collectionClassName);
 
-        return new class($classReflection, $returnType) implements PropertyReflection
+        return new class ($classReflection, $returnType) implements PropertyReflection
         {
-            /** @var ClassReflection */
-            private $classReflection;
-
-            /** @var Type\Type */
-            private $returnType;
-
-            public function __construct(ClassReflection $classReflection, Type\Type $returnType)
+            public function __construct(private ClassReflection $classReflection, private Type\Type $returnType)
             {
-                $this->classReflection = $classReflection;
-                $this->returnType = $returnType;
             }
 
-            public function getDeclaringClass(): \PHPStan\Reflection\ClassReflection
+            public function getDeclaringClass(): ClassReflection
             {
                 return $this->classReflection;
             }
@@ -83,7 +75,7 @@ final class HigherOrderCollectionProxyPropertyExtension implements PropertiesCla
                 return true;
             }
 
-            public function getDocComment(): ?string
+            public function getDocComment(): string|null
             {
                 return null;
             }
@@ -113,17 +105,17 @@ final class HigherOrderCollectionProxyPropertyExtension implements PropertiesCla
                 return false;
             }
 
-            public function isDeprecated(): \PHPStan\TrinaryLogic
+            public function isDeprecated(): TrinaryLogic
             {
                 return TrinaryLogic::createNo();
             }
 
-            public function getDeprecatedDescription(): ?string
+            public function getDeprecatedDescription(): string|null
             {
                 return null;
             }
 
-            public function isInternal(): \PHPStan\TrinaryLogic
+            public function isInternal(): TrinaryLogic
             {
                 return TrinaryLogic::createNo();
             }

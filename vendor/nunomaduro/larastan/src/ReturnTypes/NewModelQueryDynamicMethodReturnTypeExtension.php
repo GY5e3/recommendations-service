@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+namespace Larastan\Larastan\ReturnTypes;
 
 use Illuminate\Database\Eloquent\Model;
-use NunoMaduro\Larastan\Methods\BuilderHelper;
+use Larastan\Larastan\Methods\BuilderHelper;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
@@ -31,16 +31,20 @@ class NewModelQueryDynamicMethodReturnTypeExtension implements DynamicMethodRetu
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
         return in_array($methodReflection->getName(), [
-            'newQuery', 'newModelQuery', 'newQueryWithoutRelationships',
-            'newQueryWithoutScopes', 'newQueryWithoutScope', 'newQueryForRestoration',
+            'newQuery',
+            'newModelQuery',
+            'newQueryWithoutRelationships',
+            'newQueryWithoutScopes',
+            'newQueryWithoutScope',
+            'newQueryForRestoration',
         ], true);
     }
 
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
-    ): ?Type {
+        Scope $scope,
+    ): Type|null {
         $calledOnType = $scope->getType($methodCall->var);
 
         $classReflections = $calledOnType->getObjectClassReflections();

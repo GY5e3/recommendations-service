@@ -7,8 +7,12 @@
 
 use App\Http\ApiV1\Modules\Foos\Controllers\FoosController;
 use App\Http\Web\Controllers\TestController;
+
+use App\Http\ApiV1\Modules\APIRequests\Controllers\RecommendationsRequestController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('examples/{id}', [FoosController::class, 'get'])->name('getExample');
 
 Route::get('test', [TestController::class, 'get']);
+
+Route::post('rec', [RecommendationsRequestController::class, 'get']);

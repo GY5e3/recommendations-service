@@ -119,7 +119,9 @@ $c = 3;
             }
 
             $content = $token->getContent();
-            $commentContent = substr($content, 2, -2) ?: '';
+
+            /** @TODO PHP 8.0 - no more need for `?: ''` */
+            $commentContent = substr($content, 2, -2) ?: ''; // @phpstan-ignore-line
 
             if ($this->hashEnabled && str_starts_with($content, '#')) {
                 if (isset($content[1]) && '[' === $content[1]) {
@@ -162,7 +164,7 @@ $c = 3;
     {
         return new FixerConfigurationResolver([
             (new FixerOptionBuilder('comment_types', 'List of comment types to fix.'))
-                ->setAllowedTypes(['array'])
+                ->setAllowedTypes(['string[]'])
                 ->setAllowedValues([new AllowedValueSubset(['asterisk', 'hash'])])
                 ->setDefault(['asterisk', 'hash'])
                 ->getOption(),

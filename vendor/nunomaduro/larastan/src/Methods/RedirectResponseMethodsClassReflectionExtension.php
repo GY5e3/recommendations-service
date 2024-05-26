@@ -1,8 +1,10 @@
 <?php
 
-namespace NunoMaduro\Larastan\Methods;
+declare(strict_types=1);
 
-use NunoMaduro\Larastan\Reflection\DynamicWhereMethodReflection;
+namespace Larastan\Larastan\Methods;
+
+use Larastan\Larastan\Reflection\DynamicWhereMethodReflection;
 use PHPStan\Reflection;
 
 use function str_starts_with;
@@ -15,6 +17,7 @@ class RedirectResponseMethodsClassReflectionExtension implements Reflection\Meth
             return false;
         }
 
+        // @phpcs:ignore
         if (! str_starts_with($methodName, 'with')) {
             return false;
         }
@@ -24,7 +27,7 @@ class RedirectResponseMethodsClassReflectionExtension implements Reflection\Meth
 
     public function getMethod(
         Reflection\ClassReflection $classReflection,
-        string $methodName
+        string $methodName,
     ): Reflection\MethodReflection {
         return new DynamicWhereMethodReflection($classReflection, $methodName);
     }

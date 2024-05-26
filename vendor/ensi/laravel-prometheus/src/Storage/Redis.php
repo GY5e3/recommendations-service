@@ -13,6 +13,7 @@ use Prometheus\Math;
 use Prometheus\MetricFamilySamples;
 use Prometheus\Storage\Adapter;
 use Prometheus\Summary;
+use RedisException;
 use RuntimeException;
 
 class Redis implements Adapter
@@ -47,7 +48,7 @@ class Redis implements Adapter
     private $redis;
 
     /**
-     * @var boolean
+     * @var bool
      */
     private $connectionInitialized = false;
 
@@ -110,19 +111,28 @@ class Redis implements Adapter
     }
 
     /**
+     * @return string
+     * @throws RedisException
+     */
+    public function getGlobalPrefix(): string
+    {
+        $globalPrefix = $this->redis->getOption(\Redis::OPT_PREFIX);
+        // @phpstan-ignore-next-line false positive, phpstan thinks getOptions returns int
+        if (!is_string($globalPrefix)) {
+            return '';
+        }
+
+        return $globalPrefix;
+    }
+
+    /**
      * @inheritDoc
      */
     public function wipeStorage(): void
     {
         $this->ensureOpenConnection();
 
-        $searchPattern = "";
-
-        $globalPrefix = $this->redis->getOption(\Redis::OPT_PREFIX);
-        // @phpstan-ignore-next-line false positive, phpstan thinks getOptions returns int
-        if (is_string($globalPrefix)) {
-            $searchPattern .= $globalPrefix;
-        }
+        $searchPattern = $this->getGlobalPrefix();
 
         $searchPattern .= $this->prefix;
         $searchPattern .= '*';
@@ -153,7 +163,7 @@ LUA
     {
         return implode(':', [
             $data['name'],
-            'meta'
+            'meta',
         ]);
     }
 
@@ -167,7 +177,7 @@ LUA
         return implode(':', [
             $data['name'],
             $this->encodeLabelValues($data['labelValues']),
-            'value'
+            'value',
         ]);
     }
 
@@ -182,6 +192,7 @@ LUA
         $metrics = array_merge($metrics, $this->collectGauges());
         $metrics = array_merge($metrics, $this->collectCounters());
         $metrics = array_merge($metrics, $this->collectSummaries());
+
         return array_map(
             function (array $metric): MetricFamilySamples {
                 return new MetricFamilySamples($metric);
@@ -253,17 +264,20 @@ LUA
         foreach ($data['buckets'] as $bucket) {
             if ($data['value'] <= $bucket) {
                 $bucketToIncrease = $bucket;
+
                 break;
             }
         }
         $metaData = $data;
         unset($metaData['value'], $metaData['labelValues']);
 
+        $wasRemoved = $this->removeMetricOnLabelDiff($data);
+
         $this->redis->eval(
             <<<LUA
 local result = redis.call('hIncrByFloat', KEYS[1], ARGV[1], ARGV[3])
 redis.call('hIncrBy', KEYS[1], ARGV[2], 1)
-if tonumber(result) >= tonumber(ARGV[3]) then
+if tonumber(result) >= tonumber(ARGV[3]) or ARGV[5] == '1' then
     redis.call('hSet', KEYS[1], '__meta', ARGV[4])
     redis.call('sAdd', KEYS[2], KEYS[1])
 end
@@ -277,6 +291,7 @@ LUA
                 json_encode(['b' => $bucketToIncrease, 'labelValues' => $data['labelValues']]),
                 $data['value'],
                 json_encode($metaData),
+                $wasRemoved,
             ],
             2
         );
@@ -289,6 +304,8 @@ LUA
     public function updateSummary(array $data): void
     {
         $this->ensureOpenConnection();
+
+        $this->removeMetricOnLabelDiff($data);
 
         // store meta
         $summaryKey = $this->prefix . Summary::TYPE . self::PROMETHEUS_METRIC_KEYS_SUFFIX;
@@ -324,17 +341,20 @@ LUA
         $this->ensureOpenConnection();
         $metaData = $data;
         unset($metaData['value'], $metaData['labelValues'], $metaData['command']);
+
+        $wasRemoved = $this->removeMetricOnLabelDiff($data);
+
         $this->redis->eval(
             <<<LUA
 local result = redis.call(ARGV[1], KEYS[1], ARGV[2], ARGV[3])
 
 if ARGV[1] == 'hSet' then
-    if result == 1 then
+    if result == 1 or ARGV[5] == '1' then
         redis.call('hSet', KEYS[1], '__meta', ARGV[4])
         redis.call('sAdd', KEYS[2], KEYS[1])
     end
 else
-    if result == ARGV[3] then
+    if result == ARGV[3] or ARGV[5] == '1' then
         redis.call('hSet', KEYS[1], '__meta', ARGV[4])
         redis.call('sAdd', KEYS[2], KEYS[1])
     end
@@ -348,6 +368,7 @@ LUA
                 json_encode($data['labelValues']),
                 $data['value'],
                 json_encode($metaData),
+                $wasRemoved,
             ],
             2
         );
@@ -362,11 +383,14 @@ LUA
         $this->ensureOpenConnection();
         $metaData = $data;
         unset($metaData['value'], $metaData['labelValues'], $metaData['command']);
+
+        $wasRemoved = $this->removeMetricOnLabelDiff($data);
+
         $this->redis->eval(
             <<<LUA
 local result = redis.call(ARGV[1], KEYS[1], ARGV[3], ARGV[2])
 local added = redis.call('sAdd', KEYS[2], KEYS[1])
-if added == 1 then
+if added == 1 or ARGV[5] == '1' then
     redis.call('hMSet', KEYS[1], '__meta', ARGV[4])
 end
 return result
@@ -379,11 +403,108 @@ LUA
                 $data['value'],
                 json_encode($data['labelValues']),
                 json_encode($metaData),
+                $wasRemoved,
             ],
             2
         );
     }
 
+    private function removeMetricOnLabelDiff(array $data): bool
+    {
+        $metrics = match ($data['type']) {
+            Counter::TYPE => $this->collectCounters(),
+            Gauge::TYPE => $this->collectGauges(),
+            Histogram::TYPE => $this->collectHistograms(),
+            Summary::TYPE => $this->collectSummaries(),
+            default => [],
+        };
+
+        foreach ($metrics as $metric) {
+            if ($metric['name'] != $data['name']) {
+                continue;
+            }
+
+            if (
+                $this->isMetricLabelNamesIdentical($data['labelNames'], $metric['labelNames']) &&
+                !$this->issetMetricWithSuchLabelValues($data['labelValues'], $metric['samples'] ?? [])
+            ) {
+                return false;
+            }
+
+            return $this->removeMetric($data['type'], $metric);
+        }
+
+        return false;
+    }
+
+    private function isMetricLabelNamesIdentical(array $labelNames, array $existingMetricLabelNames): bool
+    {
+        $labelDiff1 = count(array_diff($existingMetricLabelNames, $labelNames));
+        $labelDiff2 = count(array_diff($labelNames, $existingMetricLabelNames));
+
+        if (
+            ($labelDiff1 == 0 && $labelDiff2 == 0) ||
+            ($labelDiff1 == count($existingMetricLabelNames) && $labelDiff2 == count($labelNames))
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Существует ли метрика с таким же labelValues, но с разными ключами
+     */
+    private function issetMetricWithSuchLabelValues(array $labelValues, array $existingMetricSamples): bool
+    {
+        foreach ($existingMetricSamples as $sample) {
+            if (
+                count(array_diff($labelValues, $sample['labelValues'])) == 0 &&
+                count(array_diff($sample['labelValues'], $labelValues)) == 0 &&
+                (count(array_diff_key($labelValues, $sample['labelValues'])) > 0 || count(array_diff_key($sample['labelValues'], $labelValues)) > 0)
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @throws \RedisException
+     */
+    public function removeMetric(string $type, array $data): bool
+    {
+        $metricKeyForDelete = $this->getGlobalPrefix() . $this->prefix;
+        $metricKeyForDelete .= match ($data['type']) {
+            Summary::TYPE => $type . implode(':', [self::PROMETHEUS_METRIC_KEYS_SUFFIX, $data['name']]). ':*',
+            default => ':' . implode(':', [$type, $data['name']]),
+        };
+
+        $result =  boolval($this->redis->eval(
+            <<<LUA
+            local cursor = "0"
+            local delResult = "0"
+            repeat
+                local results = redis.call('SCAN', cursor, 'MATCH', ARGV[1])
+                cursor = results[1]
+                for _, key in ipairs(results[2]) do
+                    delResult = delResult + redis.call('DEL', key)
+                end
+            until cursor == "0"
+            return delResult
+LUA
+            ,
+            [$metricKeyForDelete]
+        ));
+
+        $error = $this->redis->getLastError();
+        if (!$result && $error != null) {
+            throw new RuntimeException($error);
+        }
+
+        return $result;
+    }
 
     /**
      * @param mixed[] $data
@@ -393,6 +514,7 @@ LUA
     {
         $metricsMetaData = $data;
         unset($metricsMetaData['value'], $metricsMetaData['command'], $metricsMetaData['labelValues']);
+
         return $metricsMetaData;
     }
 
@@ -470,6 +592,7 @@ LUA
             }
             $histograms[] = $histogram;
         }
+
         return $histograms;
     }
 
@@ -484,6 +607,7 @@ LUA
         if ($this->redis->getOption(\Redis::OPT_PREFIX) === null) {
             return $key;
         }
+
         // @phpstan-ignore-next-line false positive, phpstan thinks getOptions returns int
         return substr($key, strlen($this->redis->getOption(\Redis::OPT_PREFIX)));
     }
@@ -536,6 +660,7 @@ LUA
 
                 if (count($samples) === 0) {
                     $this->redis->del($valueKey);
+
                     continue;
                 }
 
@@ -573,6 +698,7 @@ LUA
                 $this->redis->del($metaKey);
             }
         }
+
         return $summaries;
     }
 
@@ -602,6 +728,7 @@ LUA
             });
             $gauges[] = $gauge;
         }
+
         return $gauges;
     }
 
@@ -631,6 +758,7 @@ LUA
             });
             $counters[] = $counter;
         }
+
         return $counters;
     }
 
@@ -672,6 +800,7 @@ LUA
         if (false === $json) {
             throw new RuntimeException(json_last_error_msg());
         }
+
         return base64_encode($json);
     }
 
@@ -690,6 +819,7 @@ LUA
         if (false === $decodedValues) {
             throw new RuntimeException(json_last_error_msg());
         }
+
         return $decodedValues;
     }
 }

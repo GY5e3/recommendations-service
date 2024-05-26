@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+namespace Larastan\Larastan\ReturnTypes;
 
 use Illuminate\Support\HigherOrderTapProxy;
 use PhpParser\Node\Expr\MethodCall;
@@ -15,34 +15,23 @@ use PHPStan\Type\Type;
 
 use function count;
 
-/**
- * @internal
- */
+/** @internal */
 final class HigherOrderTapProxyExtension implements DynamicMethodReturnTypeExtension
 {
-    /**
-     * {@inheritdoc}
-     */
     public function getClass(): string
     {
         return HigherOrderTapProxy::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
+        Scope $scope,
     ): Type {
         $type = $scope->getType($methodCall->var);
 

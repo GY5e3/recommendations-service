@@ -168,7 +168,7 @@ yield  from  baz();
      * {@inheritdoc}
      *
      * Must run before BracesFixer, FunctionDeclarationFixer.
-     * Must run after ModernizeStrposFixer.
+     * Must run after ArraySyntaxFixer, ModernizeStrposFixer.
      */
     public function getPriority(): int
     {
@@ -189,7 +189,7 @@ yield  from  baz();
 
         return new FixerConfigurationResolver([
             (new FixerOptionBuilder('constructs', 'List of constructs which must be followed by a single space.'))
-                ->setAllowedTypes(['array'])
+                ->setAllowedTypes(['string[]'])
                 ->setAllowedValues([new AllowedValueSubset($tokens)])
                 ->setDefault(array_keys($defaults))
                 ->getOption(),

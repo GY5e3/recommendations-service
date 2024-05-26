@@ -21,7 +21,7 @@ final class GeneratedConfig
         0 => 'extension.neon',
       ),
     ),
-    'version' => '2.70.0',
+    'version' => '2.72.3',
   ),
   'nunomaduro/larastan' => 
   array (
@@ -34,7 +34,20 @@ final class GeneratedConfig
         0 => 'extension.neon',
       ),
     ),
-    'version' => 'v2.6.4',
+    'version' => 'v2.9.6',
+  ),
+  'pestphp/pest' => 
+  array (
+    'install_path' => '/home/gy5e3/PhpstormProjects/recommendations-service/vendor/pestphp/pest',
+    'relative_install_path' => '../../../pestphp/pest',
+    'extra' => 
+    array (
+      'includes' => 
+      array (
+        0 => 'extension.neon',
+      ),
+    ),
+    'version' => 'v2.34.7',
   ),
   'spaze/phpstan-disallowed-calls' => 
   array (
@@ -47,7 +60,7 @@ final class GeneratedConfig
         0 => 'extension.neon',
       ),
     ),
-    'version' => 'v2.16.0',
+    'version' => 'v2.16.1',
   ),
 );
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\Reflection;
+namespace Larastan\Larastan\Reflection;
 
 use PHPStan\Reflection\ParameterReflection;
 use PHPStan\Reflection\PassedByReference;
@@ -36,7 +36,7 @@ class DynamicWhereParameterReflection implements ParameterReflection
         return false;
     }
 
-    public function getDefaultValue(): ?Type
+    public function getDefaultValue(): Type|null
     {
         return null;
     }

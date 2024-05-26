@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+namespace Larastan\Larastan\ReturnTypes;
 
-use NunoMaduro\Larastan\Concerns\HasContainer;
+use Larastan\Larastan\Concerns\HasContainer;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
@@ -15,21 +15,14 @@ use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 
 use function count;
-use function get_class;
 use function is_object;
 
 class ContainerArrayAccessDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
     use HasContainer;
 
-    /**
-     * @var string
-     */
-    private $className;
-
-    public function __construct(string $className)
+    public function __construct(private string $className)
     {
-        $this->className = $className;
     }
 
     public function getClass(): string
@@ -45,8 +38,8 @@ class ContainerArrayAccessDynamicMethodReturnTypeExtension implements DynamicMet
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
-    ): ?Type {
+        Scope $scope,
+    ): Type|null {
         $args = $methodCall->getArgs();
 
         if (count($args) === 0) {
@@ -72,7 +65,7 @@ class ContainerArrayAccessDynamicMethodReturnTypeExtension implements DynamicMet
             }
 
             if (is_object($resolvedValue)) {
-                $class = get_class($resolvedValue);
+                $class = $resolvedValue::class;
 
                 $argTypes[] = new ObjectType($class);
                 continue;

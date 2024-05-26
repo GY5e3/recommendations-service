@@ -1,8 +1,10 @@
 <?php
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+declare(strict_types=1);
 
-use NunoMaduro\Larastan\Concerns\HasContainer;
+namespace Larastan\Larastan\ReturnTypes;
+
+use Larastan\Larastan\Concerns\HasContainer;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
@@ -15,7 +17,6 @@ use PHPStan\Type\TypeCombinator;
 use Throwable;
 
 use function count;
-use function get_class;
 
 final class AppMakeHelper
 {
@@ -43,8 +44,8 @@ final class AppMakeHelper
                         return new ErrorType();
                     }
 
-                    $types[] = new ObjectType(get_class($resolved));
-                } catch (Throwable $exception) {
+                    $types[] = new ObjectType($resolved::class);
+                } catch (Throwable) {
                     return new ErrorType();
                 }
             }

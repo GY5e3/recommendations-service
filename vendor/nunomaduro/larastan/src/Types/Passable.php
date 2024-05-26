@@ -2,42 +2,23 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\Types;
+namespace Larastan\Larastan\Types;
 
-use NunoMaduro\Larastan\Contracts\Types\PassableContract;
+use Larastan\Larastan\Contracts\Types\PassableContract;
 use PHPStan\Type\Type;
 
-/**
- * @internal
- */
+/** @internal */
 final class Passable implements PassableContract
 {
-    /**
-     * @var \PHPStan\Type\Type
-     */
-    private $type;
-
-    /**
-     * Passable constructor.
-     *
-     * @param  \PHPStan\Type\Type  $type
-     */
-    public function __construct(Type $type)
+    public function __construct(private Type $type)
     {
-        $this->type = $type;
     }
 
-    /**
-     * @return \PHPStan\Type\Type
-     */
     public function getType(): Type
     {
         return $this->type;
     }
 
-    /**
-     * @param  \PHPStan\Type\Type  $type
-     */
     public function setType(Type $type): void
     {
         $this->type = $type;

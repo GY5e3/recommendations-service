@@ -2,15 +2,22 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\Properties;
+namespace Larastan\Larastan\Properties;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
-use NunoMaduro\Larastan\Concerns;
-use NunoMaduro\Larastan\Reflection\ReflectionHelper;
-use NunoMaduro\Larastan\Support\CollectionHelper;
-use NunoMaduro\Larastan\Types\RelationParserHelper;
+use Larastan\Larastan\Concerns;
+use Larastan\Larastan\Reflection\ReflectionHelper;
+use Larastan\Larastan\Support\CollectionHelper;
+use Larastan\Larastan\Types\RelationParserHelper;
 use PHPStan\Analyser\OutOfClassScope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
@@ -30,9 +37,7 @@ use PHPStan\Type\UnionType;
 
 use function str_ends_with;
 
-/**
- * @internal
- */
+/** @internal */
 final class ModelRelationsExtension implements PropertiesClassReflectionExtension
 {
     use Concerns\HasContainer;
@@ -52,22 +57,28 @@ final class ModelRelationsExtension implements PropertiesClassReflectionExtensio
         }
 
         if (str_ends_with($propertyName, '_count')) {
-            $propertyName = Str::camel(Str::before($propertyName, '_count'));
+            $propertyName = Str::before($propertyName, '_count');
+
+            $methodNames = [Str::camel($propertyName), $propertyName];
+        } else {
+            $methodNames = [$propertyName];
         }
 
-        $hasNativeMethod = $classReflection->hasNativeMethod($propertyName);
+        foreach ($methodNames as $methodName) {
+            $hasNativeMethod = $classReflection->hasNativeMethod($methodName);
 
-        if (! $hasNativeMethod) {
-            return false;
+            if (! $hasNativeMethod) {
+                continue;
+            }
+
+            $returnType = ParametersAcceptorSelector::selectSingle($classReflection->getNativeMethod($methodName)->getVariants())->getReturnType();
+
+            if ((new ObjectType(Relation::class))->isSuperTypeOf($returnType)->yes()) {
+                return true;
+            }
         }
 
-        $returnType = ParametersAcceptorSelector::selectSingle($classReflection->getNativeMethod($propertyName)->getVariants())->getReturnType();
-
-        if (! (new ObjectType(Relation::class))->isSuperTypeOf($returnType)->yes()) {
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
@@ -89,8 +100,8 @@ final class ModelRelationsExtension implements PropertiesClassReflectionExtensio
                 $relatedModelClassNames = $relatedModel->getObjectClassNames();
             }
         } else {
-            $modelName = $this->relationParserHelper->findRelatedModelInRelationMethod($method) ?? Model::class;
-            $relatedModel = new ObjectType($modelName);
+            $modelName              = $this->relationParserHelper->findRelatedModelInRelationMethod($method) ?? Model::class;
+            $relatedModel           = new ObjectType($modelName);
             $relatedModelClassNames = [$modelName];
         }
 
@@ -104,11 +115,22 @@ final class ModelRelationsExtension implements PropertiesClassReflectionExtensio
             }
 
             if ($type instanceof GenericObjectType) {
-                $relatedModel = $type->getTypes()[0];
+                $relatedModel           = $type->getTypes()[0];
                 $relatedModelClassNames = $relatedModel->getObjectClassNames();
             }
 
-            if (Str::contains($type->getObjectClassNames()[0], 'Many')) {
+            if (
+                (new ObjectType(BelongsToMany::class))->isSuperTypeOf($type)->yes()
+                || (new ObjectType(HasMany::class))->isSuperTypeOf($type)->yes()
+                || (
+                    (new ObjectType(HasManyThrough::class))->isSuperTypeOf($type)->yes()
+                    // HasOneThrough extends HasManyThrough
+                    && ! (new ObjectType(HasOneThrough::class))->isSuperTypeOf($type)->yes()
+                )
+                || (new ObjectType(MorphMany::class))->isSuperTypeOf($type)->yes()
+                || (new ObjectType(MorphToMany::class))->isSuperTypeOf($type)->yes()
+                || Str::contains($type->getObjectClassNames()[0], 'Many') // fallback
+            ) {
                 $types = [];
 
                 foreach ($relatedModelClassNames as $relatedModelClassName) {
@@ -120,7 +142,10 @@ final class ModelRelationsExtension implements PropertiesClassReflectionExtensio
                 }
             }
 
-            if (Str::endsWith($type->getObjectClassNames()[0], 'MorphTo')) {
+            if (
+                (new ObjectType(MorphTo::class))->isSuperTypeOf($type)->yes()
+                || Str::endsWith($type->getObjectClassNames()[0], 'MorphTo') // fallback
+            ) {
                 // There was no generic type, or it was just Model
                 // so we will return mixed to avoid errors.
                 if ($relatedModel->getObjectClassNames()[0] === Model::class) {

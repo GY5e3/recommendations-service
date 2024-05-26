@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\Collectors;
+namespace Larastan\Larastan\Collectors;
 
 use Illuminate\View\ViewName;
 use PhpParser\Node;
@@ -20,7 +20,7 @@ final class UsedViewFunctionCollector implements Collector
     }
 
     /** @param Node\Expr\FuncCall $node */
-    public function processNode(Node $node, Scope $scope): ?string
+    public function processNode(Node $node, Scope $scope): string|null
     {
         $funcName = $node->name;
 

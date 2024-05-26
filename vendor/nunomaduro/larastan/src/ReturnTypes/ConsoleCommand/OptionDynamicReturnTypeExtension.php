@@ -1,10 +1,12 @@
 <?php
 
-namespace NunoMaduro\Larastan\ReturnTypes\ConsoleCommand;
+declare(strict_types=1);
+
+namespace Larastan\Larastan\ReturnTypes\ConsoleCommand;
 
 use InvalidArgumentException;
-use NunoMaduro\Larastan\Internal\ConsoleApplicationHelper;
-use NunoMaduro\Larastan\Internal\ConsoleApplicationResolver;
+use Larastan\Larastan\Internal\ConsoleApplicationHelper;
+use Larastan\Larastan\Internal\ConsoleApplicationResolver;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
@@ -35,8 +37,8 @@ class OptionDynamicReturnTypeExtension implements DynamicMethodReturnTypeExtensi
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
-    ): ?Type {
+        Scope $scope,
+    ): Type|null {
         $classReflection = $scope->getClassReflection();
 
         if ($classReflection === null) {

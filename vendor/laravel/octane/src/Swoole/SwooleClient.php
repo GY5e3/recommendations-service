@@ -11,6 +11,7 @@ use Laravel\Octane\MimeType;
 use Laravel\Octane\Octane;
 use Laravel\Octane\OctaneResponse;
 use Laravel\Octane\RequestContext;
+use ReflectionClass;
 use Swoole\Http\Response as SwooleResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,6 +22,7 @@ class SwooleClient implements Client, ServesStaticFiles
 {
     const STATUS_CODE_REASONS = [
         419 => 'Page Expired',
+        425 => 'Too Early',
         431 => 'Request Header Fields Too Large',                             // RFC6585
         451 => 'Unavailable For Legal Reasons',                               // RFC7725
     ];
@@ -200,7 +202,10 @@ class SwooleClient implements Client, ServesStaticFiles
     protected function sendResponseContent(OctaneResponse $octaneResponse, SwooleResponse $swooleResponse): void
     {
         if ($octaneResponse->response instanceof BinaryFileResponse) {
-            $swooleResponse->sendfile($octaneResponse->response->getFile()->getPathname());
+            $swooleResponse->sendfile(
+                $octaneResponse->response->getFile()->getPathname(),
+                (new ReflectionClass(BinaryFileResponse::class))->getProperty('offset')->getValue($octaneResponse->response)
+            );
 
             return;
         }
@@ -235,7 +240,7 @@ class SwooleClient implements Client, ServesStaticFiles
             return;
         }
 
-        if ($length <= $this->chunkSize) {
+        if ($length <= $this->chunkSize || config('octane.swoole.options.open_http2_protocol', false)) {
             $swooleResponse->end($content);
 
             return;

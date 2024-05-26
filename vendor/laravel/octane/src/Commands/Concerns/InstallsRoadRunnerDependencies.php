@@ -21,7 +21,7 @@ trait InstallsRoadRunnerDependencies
      *
      * @var string
      */
-    protected $requiredVersion = '2023.1.1';
+    protected $requiredRoadRunnerVersion = '2023.3.0';
 
     /**
      * Determine if RoadRunner is installed.
@@ -44,13 +44,13 @@ trait InstallsRoadRunnerDependencies
             return true;
         }
 
-        if (! $this->confirm('Octane requires "spiral/roadrunner-http:^3.0.1" and "spiral/roadrunner-cli:^2.5.0". Do you wish to install them as a dependencies?')) {
+        if (! $this->confirm('Octane requires "spiral/roadrunner-http:^3.3.0" and "spiral/roadrunner-cli:^2.6.0". Do you wish to install them as a dependencies?')) {
             $this->error('Octane requires "spiral/roadrunner-http" and "spiral/roadrunner-cli".');
 
             return false;
         }
 
-        $command = $this->findComposer().' require spiral/roadrunner-http:^3.0.1 spiral/roadrunner-cli:^2.5.0 --with-all-dependencies';
+        $command = $this->findComposer().' require spiral/roadrunner-http:^3.3.0 spiral/roadrunner-cli:^2.6.0 --with-all-dependencies';
 
         $process = Process::fromShellCommandline($command, null, null, null, null);
 
@@ -131,7 +131,7 @@ trait InstallsRoadRunnerDependencies
 
         $version = explode(' ', $version)[2];
 
-        if (version_compare($version, $this->requiredVersion, '>=')) {
+        if (version_compare($version, $this->requiredRoadRunnerVersion, '>=')) {
             return;
         }
 

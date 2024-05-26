@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+namespace Larastan\Larastan\ReturnTypes;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
@@ -17,34 +17,23 @@ use PHPStan\Type\TypeCombinator;
 
 use function count;
 
-/**
- * @internal
- */
+/** @internal */
 final class RequestRouteExtension implements DynamicMethodReturnTypeExtension
 {
-    /**
-     * {@inheritdoc}
-     */
     public function getClass(): string
     {
         return Request::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
         return $methodReflection->getName() === 'route';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
+        Scope $scope,
     ): Type {
         if (count($methodCall->getArgs()) === 0) {
             return TypeCombinator::addNull(new ObjectType(Route::class));
@@ -53,7 +42,7 @@ final class RequestRouteExtension implements DynamicMethodReturnTypeExtension
         return ParametersAcceptorSelector::selectFromArgs(
             $scope,
             $methodCall->getArgs(),
-            $methodReflection->getVariants()
+            $methodReflection->getVariants(),
         )->getReturnType();
     }
 }

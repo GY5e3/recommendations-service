@@ -1,5 +1,25 @@
 # Change Log
 
+## [5.9.x] - YYYY-MM-DD
+
+- Fix keywords not being recognized as table alias (#496)
+- Add `bin/sql-parser` executable file (#517)
+- Fix bind parameter in LIMIT OFFSET (#498)
+- Fix using ? as a parameter (#515)
+
+## [5.8.2] - 2023-09-19
+
+- Fix a regression with the ALTER operation (#511)
+
+## [5.8.1] - 2023-09-15
+
+- Fix `:=` was not recognized as an operator just like `=` (#306)
+- Fix `ALTER TABLE … MODIFY … ENUM('<reserved_keyword>')` is being wrongly parsed (#234)
+- Fix `ALTER TABLE … MODIFY … ENUM('<reserved_keyword>')` is being wrongly parsed (#478)
+- Fix MariaDB window function with alias gives bad linting errors (#283)
+- Fix unrecognized keyword `COLLATE` in `WHERE` clauses (#491)
+- Fix invalid hexadecimal prefix 0X (#508)
+
 ## [5.8.0] - 2023-06-05
 
 - Fix `ALTER EVENT RENAME TO` to use expression instead of var (#419)

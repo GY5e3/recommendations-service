@@ -102,7 +102,7 @@ final class Example
         return new FixerConfigurationResolver([
             (new FixerOptionBuilder('elements', 'List of strings which element should be modified.'))
                 ->setDefault($values)
-                ->setAllowedTypes(['array'])
+                ->setAllowedTypes(['string[]'])
                 ->setAllowedValues([new AllowedValueSubset($values)])
                 ->getOption(),
         ]);
@@ -195,7 +195,7 @@ final class Example
     }
 
     /**
-     * @return Token[]
+     * @return list<Token>
      */
     private function getModifiersSequences(Tokens $tokens, string $type, int $startIndex, int $endIndex): array
     {

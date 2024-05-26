@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+namespace Larastan\Larastan\ReturnTypes;
 
 use Illuminate\Contracts\Translation\Translator;
 use PhpParser\Node\Expr\FuncCall;
@@ -18,26 +18,18 @@ use PHPStan\Type\Type;
 
 use function count;
 
-/**
- * @internal
- */
+/** @internal */
 final class TransHelperReturnTypeExtension implements DynamicFunctionReturnTypeExtension
 {
-    /**
-     * {@inheritdoc}
-     */
     public function isFunctionSupported(FunctionReflection $functionReflection): bool
     {
         return $functionReflection->getName() === 'trans';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTypeFromFunctionCall(
         FunctionReflection $functionReflection,
         FuncCall $functionCall,
-        Scope $scope
+        Scope $scope,
     ): Type {
         if (count($functionCall->args) === 0) {
             return new ObjectType(Translator::class);

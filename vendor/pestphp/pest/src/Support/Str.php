@@ -24,7 +24,7 @@ final class Str
      * Create a (unsecure & non-cryptographically safe) random alpha-numeric
      * string value.
      *
-     * @param  int  $length the length of the resulting randomized string
+     * @param  int  $length  the length of the resulting randomized string
      *
      * @see https://github.com/laravel/framework/blob/4.2/src/Illuminate/Support/Str.php#L240-L242
      */
@@ -107,5 +107,13 @@ final class Str
     public static function describe(string $describeDescription, string $testDescription): string
     {
         return sprintf('`%s` → %s', $describeDescription, $testDescription);
+    }
+
+    /**
+     * Determine if a given value is a valid URL.
+     */
+    public static function isUrl(string $value): bool
+    {
+        return (bool) filter_var($value, FILTER_VALIDATE_URL);
     }
 }
