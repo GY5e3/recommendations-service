@@ -3,7 +3,8 @@
 use Illuminate\Support\Facades\Facade;
 
 return [
-
+    'client_id' => env('CLIENT_ID'),
+    'client_secret' => env('CLIENT_SECRET'),
     /*
     |--------------------------------------------------------------------------
     | Application Name

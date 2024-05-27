@@ -23,10 +23,6 @@ class RecommendationsRequestController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
-
-       // $paramsAndTracks= json_decode($request->getContent());
-       // $parameters= MeanMetricsAction::execute($paramsAndTracks);
-       // return response()->json($parameters);
     }
 
 }
