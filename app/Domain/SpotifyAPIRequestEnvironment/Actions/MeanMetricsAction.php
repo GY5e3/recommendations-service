@@ -6,7 +6,7 @@ use App\Domain\SpotifyAPIRequestEnvironment\Models\Parameters;
 
 class MeanMetricsAction
 {
-    public static function execute(array $metrics): Parameters
+    public static function Execute(array $metrics): Parameters
     {
         $params = [];
         foreach ($metrics as $list) {

@@ -1,42 +1,100 @@
 openapi: 3.0.3
 info:
-  title: Ensi Backend Skeleton (Replace me)
+  title: Recommendation service
   contact:
     name: API Support
     url: https://ensi.tech/contacts
     email: mail@greensight.ru
   version: 1.0.0
-  description: Ensi Backend Skeleton Description (Replace me)
+  description: Сервис музыкальных рекомендаций на основе Spotify API
 servers:
   - url: /api/v1
 tags:
   - name: examples
     description: Тэг-пример
 paths:
-  /examples/{id}:
-    get:
-      tags:
-        - examples
-      operationId: getExample
-      x-lg-handler: 'App\Http\ApiV1\Modules\Foos\Controllers\FoosController@get'
-      x-lg-route-name: 'getExample'
-      x-lg-skip-request-generation: true
-      summary: Получение объекта типа Example
-      description: Получение объекта типа Example
-      parameters:
-        - $ref: '#/components/parameters/PathId'
-        - $ref: '#/components/parameters/QueryInclude'
+  /rec:
+    post:
+      summary: Get recommendations
+      description: Получение списка рекомендаций
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  seed_tracks:
+                    type: string
+                    example: "0UnaXB4f6g7nQmMdQlBS5h"
+                  target_danceability:
+                    type: number
+                    format: float
+                    example: 0.401
+                  target_energy:
+                    type: number
+                    format: float
+                    example: 0.858
+                  target_speechiness:
+                    type: number
+                    format: float
+                    example: 0.156
+                  target_tempo:
+                    type: number
+                    format: float
+                    example: 125.866
+                  target_valence:
+                    type: number
+                    format: float
+                    example: 0.263
       responses:
-        #"200":
-          #description: Успешный ответ
-          # content:
-          #  application/json:
-          #    schema:
-          #      $ref: './customers.yaml#/CustomerResponse'
-        "404":
-          $ref: '#/components/responses/NotFound'
-        "500":
-          $ref: '#/components/responses/ServerError'
+        '200':
+          description: A list of recommended tracks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "Track Name"
+                        artist:
+                          type: string
+                          example: "Artist Name"
+                        album:
+                          type: string
+                          example: "Album Name"
+                        release_date:
+                          type: string
+                          format: date
+                          example: "2020-01-01"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid request"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "An error occurred"
 components:
   parameters:
     QueryInclude:

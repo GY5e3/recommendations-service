@@ -10,4 +10,4 @@ Route::get('health', HealthCheck::class);
 
 Route::get('/', [OasController::class, 'list']);
 
-Route::post('rec', [RecommendationsRequestController::class, 'get']);
+Route::post('rec', [RecommendationsRequestController::class, 'post']);
