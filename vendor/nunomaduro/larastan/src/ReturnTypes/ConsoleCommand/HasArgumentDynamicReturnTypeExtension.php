@@ -1,8 +1,10 @@
 <?php
 
-namespace NunoMaduro\Larastan\ReturnTypes\ConsoleCommand;
+declare(strict_types=1);
 
-use NunoMaduro\Larastan\Internal\ConsoleApplicationResolver;
+namespace Larastan\Larastan\ReturnTypes\ConsoleCommand;
+
+use Larastan\Larastan\Internal\ConsoleApplicationResolver;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
@@ -32,8 +34,8 @@ class HasArgumentDynamicReturnTypeExtension implements DynamicMethodReturnTypeEx
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
-    ): ?Type {
+        Scope $scope,
+    ): Type|null {
         $classReflection = $scope->getClassReflection();
 
         if ($classReflection === null) {

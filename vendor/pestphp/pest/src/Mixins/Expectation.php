@@ -131,7 +131,7 @@ final class Expectation
      *
      * @return self<TValue>
      */
-    public function toBeGreaterThan(int|float|DateTimeInterface $expected, string $message = ''): self
+    public function toBeGreaterThan(int|float|string|DateTimeInterface $expected, string $message = ''): self
     {
         Assert::assertGreaterThan($expected, $this->value, $message);
 
@@ -143,7 +143,7 @@ final class Expectation
      *
      * @return self<TValue>
      */
-    public function toBeGreaterThanOrEqual(int|float|DateTimeInterface $expected, string $message = ''): self
+    public function toBeGreaterThanOrEqual(int|float|string|DateTimeInterface $expected, string $message = ''): self
     {
         Assert::assertGreaterThanOrEqual($expected, $this->value, $message);
 
@@ -155,7 +155,7 @@ final class Expectation
      *
      * @return self<TValue>
      */
-    public function toBeLessThan(int|float|DateTimeInterface $expected, string $message = ''): self
+    public function toBeLessThan(int|float|string|DateTimeInterface $expected, string $message = ''): self
     {
         Assert::assertLessThan($expected, $this->value, $message);
 
@@ -167,7 +167,7 @@ final class Expectation
      *
      * @return self<TValue>
      */
-    public function toBeLessThanOrEqual(int|float|DateTimeInterface $expected, string $message = ''): self
+    public function toBeLessThanOrEqual(int|float|string|DateTimeInterface $expected, string $message = ''): self
     {
         Assert::assertLessThanOrEqual($expected, $this->value, $message);
 
@@ -191,6 +191,24 @@ final class Expectation
                 }
                 Assert::assertContains($needle, $this->value);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Asserts that $needle equal an element of the value.
+     *
+     * @return self<TValue>
+     */
+    public function toContainEqual(mixed ...$needles): self
+    {
+        if (! is_iterable($this->value)) {
+            InvalidExpectationValue::expected('iterable');
+        }
+
+        foreach ($needles as $needle) {
+            Assert::assertContainsEquals($needle, $this->value);
         }
 
         return $this;
@@ -314,13 +332,13 @@ final class Expectation
     /**
      * Asserts that the value contains the provided properties $names.
      *
-     * @param  iterable<array-key, string>  $names
+     * @param  iterable<string, mixed>|iterable<int, string>  $names
      * @return self<TValue>
      */
     public function toHaveProperties(iterable $names, string $message = ''): self
     {
         foreach ($names as $name => $value) {
-            is_int($name) ? $this->toHaveProperty($value, message: $message) : $this->toHaveProperty($name, $value, $message);
+            is_int($name) ? $this->toHaveProperty($value, message: $message) : $this->toHaveProperty($name, $value, $message); // @phpstan-ignore-line
         }
 
         return $this;
@@ -844,6 +862,7 @@ final class Expectation
 
         $string = match (true) {
             is_string($this->value) => $this->value,
+            is_object($this->value) && method_exists($this->value, 'toSnapshot') => $this->value->toSnapshot(),
             is_object($this->value) && method_exists($this->value, '__toString') => $this->value->__toString(),
             is_object($this->value) && method_exists($this->value, 'toString') => $this->value->toString(),
             $this->value instanceof \Illuminate\Testing\TestResponse => $this->value->getContent(), // @phpstan-ignore-line
@@ -919,7 +938,7 @@ final class Expectation
      * @param  (Closure(Throwable): mixed)|string  $exception
      * @return self<TValue>
      */
-    public function toThrow(callable|string|Throwable $exception, string $exceptionMessage = null, string $message = ''): self
+    public function toThrow(callable|string|Throwable $exception, ?string $exceptionMessage = null, string $message = ''): self
     {
         $callback = NullClosure::create();
 
@@ -967,6 +986,7 @@ final class Expectation
             }
 
             Assert::assertInstanceOf($exception, $e, $message);
+
             $callback($e);
 
             return $this;
@@ -1125,6 +1145,35 @@ final class Expectation
         }
 
         Assert::assertTrue(Str::isUuid($this->value), $message);
+
+        return $this;
+    }
+
+    /**
+     * Asserts that the value is between 2 specified values
+     *
+     * @return self<TValue>
+     */
+    public function toBeBetween(int|float|DateTimeInterface $lowestValue, int|float|DateTimeInterface $highestValue, string $message = ''): self
+    {
+        Assert::assertGreaterThanOrEqual($lowestValue, $this->value, $message);
+        Assert::assertLessThanOrEqual($highestValue, $this->value, $message);
+
+        return $this;
+    }
+
+    /**
+     * Asserts that the value is a url
+     *
+     * @return self<TValue>
+     */
+    public function toBeUrl(string $message = ''): self
+    {
+        if ($message === '') {
+            $message = "Failed asserting that {$this->value} is a url.";
+        }
+
+        Assert::assertTrue(Str::isUrl((string) $this->value), $message);
 
         return $this;
     }

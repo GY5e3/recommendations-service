@@ -2,30 +2,25 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\Methods\Pipes;
+namespace Larastan\Larastan\Methods\Pipes;
 
 use Closure;
-use Exception;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Str;
-use NunoMaduro\Larastan\Contracts\Methods\PassableContract;
-use NunoMaduro\Larastan\Contracts\Methods\Pipes\PipeContract;
-use NunoMaduro\Larastan\Reflection\ReflectionHelper;
+use Larastan\Larastan\Contracts\Methods\PassableContract;
+use Larastan\Larastan\Contracts\Methods\Pipes\PipeContract;
+use Larastan\Larastan\Reflection\ReflectionHelper;
+use Throwable;
 
+use function assert;
 use function class_exists;
-use function get_class;
 use function sprintf;
 use function strrpos;
 use function substr;
 
-/**
- * @internal
- */
+/** @internal */
 final class Facades implements PipeContract
 {
-    /**
-     * {@inheritdoc}
-     */
     public function handle(PassableContract $passable, Closure $next): void
     {
         $classReflection = $passable->getClassReflection();
@@ -45,12 +40,11 @@ final class Facades implements PipeContract
 
             try {
                 $concrete = $facadeClass::getFacadeRoot();
-            } catch (Exception) {
-                //
+            } catch (Throwable) {
             }
 
             if ($concrete) {
-                $class = get_class($concrete);
+                $class = $concrete::class;
 
                 if ($class) {
                     $found = $passable->sendToPipeline($class, true);
@@ -67,9 +61,11 @@ final class Facades implements PipeContract
             }
         }
 
-        if (! $found) {
-            $next($passable);
+        if ($found) {
+            return;
         }
+
+        $next($passable);
     }
 
     private function getFake(string $facade): string

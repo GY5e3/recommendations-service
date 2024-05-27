@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+namespace Larastan\Larastan\ReturnTypes;
 
 use Illuminate\Support\Enumerable;
 use PhpParser\Node\Expr\MethodCall;
@@ -36,15 +36,15 @@ class CollectionWhereNotNullDynamicReturnTypeExtension implements DynamicMethodR
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
-    ): ?Type {
+        Scope $scope,
+    ): Type|null {
         $calledOnType = $scope->getType($methodCall->var);
 
         if ($calledOnType->getObjectClassNames() === []) {
             return null;
         }
 
-        $keyType = $methodReflection->getDeclaringClass()->getActiveTemplateTypeMap()->getType('TKey');
+        $keyType   = $methodReflection->getDeclaringClass()->getActiveTemplateTypeMap()->getType('TKey');
         $valueType = $methodReflection->getDeclaringClass()->getActiveTemplateTypeMap()->getType('TValue') ??
             $methodReflection->getDeclaringClass()->getActiveTemplateTypeMap()->getType('TModel');
 

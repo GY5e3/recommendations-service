@@ -102,10 +102,25 @@ class MetricsBag
         return config('prometheus.enabled');
     }
 
+    private function apcuNgAdapterIsUsed(): bool
+    {
+        return isset($this->config['apcu-ng']);
+    }
+
     public function update(string $name, $value, array $labelValues = []): void
     {
         if (!$this->isPrometheusEnabled()) {
             return;
+        }
+
+        if ($this->apcuNgAdapterIsUsed()) {
+            $labelValues = array_map(function ($labelValue) {
+                if (!is_string($labelValue)) {
+                    $labelValue = json_encode($labelValue);
+                }
+
+                return $labelValue;
+            }, $labelValues);
         }
 
         $metric = $this->metrics[$name] ?? null;
@@ -134,6 +149,7 @@ class MetricsBag
         }
 
         $renderer = new RenderTextFormat();
+
         try {
             return $renderer->render($this->getCollectors()->getMetricFamilySamples());
         } catch (\RedisException) {
@@ -167,6 +183,7 @@ class MetricsBag
             case array_key_exists('null-storage', $this->config):
                 return new NullStorage();
         }
+
         throw new InvalidArgumentException("Missing storage configuration");
     }
 
@@ -178,7 +195,7 @@ class MetricsBag
             return Redis::fromExistingConnection($redisConnection->client(), [
                 'bag' => $options['bag'],
             ]);
-        }  catch (\RedisException) {
+        } catch (\RedisException) {
             return new NullStorage();
         }
     }

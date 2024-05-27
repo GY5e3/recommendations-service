@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+namespace Larastan\Larastan\ReturnTypes;
 
 use Illuminate\Contracts\Foundation\Application;
 use PhpParser\Node\Expr\MethodCall;
@@ -16,7 +16,7 @@ use function in_array;
 final class ApplicationMakeDynamicReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
     public function __construct(
-        private AppMakeHelper $appMakeHelper
+        private AppMakeHelper $appMakeHelper,
     ) {
     }
 
@@ -30,7 +30,7 @@ final class ApplicationMakeDynamicReturnTypeExtension implements DynamicMethodRe
         return in_array($methodReflection->getName(), ['make', 'makeWith', 'resolve'], true);
     }
 
-    public function getTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): ?Type
+    public function getTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): Type
     {
         return $this->appMakeHelper->resolveTypeFromCall($methodCall, $scope);
     }

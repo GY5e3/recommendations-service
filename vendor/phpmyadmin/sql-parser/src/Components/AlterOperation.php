@@ -11,7 +11,7 @@ use PhpMyAdmin\SqlParser\TokensList;
 
 use function array_key_exists;
 use function in_array;
-use function is_numeric;
+use function is_int;
 use function is_string;
 use function trim;
 
@@ -237,11 +237,7 @@ class AlterOperation extends Component
         'ON COMPLETION PRESERVE' => 5,
         'ON COMPLETION NOT PRESERVE' => 5,
         'RENAME' => 6,
-        'TO' => [
-            7,
-            'expr',
-            ['parseField' => 'table'],
-        ],
+        'TO' => [7, 'expr', ['parseField' => 'table', 'breakOnAlias' => true]],
         'ENABLE' => 8,
         'DISABLE' => 8,
         'DISABLE ON SLAVE' => 8,
@@ -412,7 +408,7 @@ class AlterOperation extends Component
 
                 $state = 2;
             } elseif ($state === 2) {
-                if (is_string($token->value) || is_numeric($token->value)) {
+                if (is_string($token->value) || is_int($token->value)) {
                     $arrayKey = $token->value;
                 } else {
                     $arrayKey = $token->token;
@@ -426,8 +422,8 @@ class AlterOperation extends Component
                     } elseif (($token->value === ',') && ($brackets === 0)) {
                         break;
                     }
-                } elseif (! self::checkIfTokenQuotedSymbol($token)) {
-                    if (! empty(Parser::$STATEMENT_PARSERS[$token->value])) {
+                } elseif (! self::checkIfTokenQuotedSymbol($token) && $token->type !== Token::TYPE_STRING) {
+                    if (isset(Parser::$STATEMENT_PARSERS[$arrayKey]) && Parser::$STATEMENT_PARSERS[$arrayKey] !== '') {
                         $list->idx++; // Ignore the current token
                         $nextToken = $list->getNext();
 
@@ -439,7 +435,7 @@ class AlterOperation extends Component
                             ++$list->idx;
                         } else {
                             // We have reached the end of ALTER operation and suddenly found
-                            // a start to new statement, but have not find a delimiter between them
+                            // a start to new statement, but have not found a delimiter between them
                             $parser->error(
                                 'A new statement was found, but no delimiter between it and the previous one.',
                                 $token

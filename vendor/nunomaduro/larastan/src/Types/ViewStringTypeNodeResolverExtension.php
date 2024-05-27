@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\Types;
+namespace Larastan\Larastan\Types;
 
 use PHPStan\Analyser\NameScope;
 use PHPStan\PhpDoc\TypeNodeResolverExtension;
@@ -15,7 +15,7 @@ use PHPStan\Type\Type;
  */
 class ViewStringTypeNodeResolverExtension implements TypeNodeResolverExtension
 {
-    public function resolve(TypeNode $typeNode, NameScope $nameScope): ?Type
+    public function resolve(TypeNode $typeNode, NameScope $nameScope): Type|null
     {
         if ($typeNode instanceof IdentifierTypeNode && $typeNode->__toString() === 'view-string') {
             return new ViewStringType();

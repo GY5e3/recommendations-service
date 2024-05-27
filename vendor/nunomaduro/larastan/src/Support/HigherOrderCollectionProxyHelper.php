@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\Support;
+namespace Larastan\Larastan\Support;
 
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\HigherOrderCollectionProxy;
@@ -20,9 +20,7 @@ class HigherOrderCollectionProxyHelper
     {
     }
 
-    /**
-     * @phpstan-param 'method'|'property' $propertyOrMethod
-     */
+    /** @phpstan-param 'method'|'property' $propertyOrMethod */
     public function hasPropertyOrMethod(ClassReflection $classReflection, string $name, string $propertyOrMethod): bool
     {
         if ($classReflection->getName() !== HigherOrderCollectionProxy::class) {
@@ -36,7 +34,7 @@ class HigherOrderCollectionProxyHelper
         }
 
         $methodType = $activeTemplateTypeMap->getType('T');
-        $valueType = $activeTemplateTypeMap->getType('TValue');
+        $valueType  = $activeTemplateTypeMap->getType('TValue');
 
         if (($methodType === null) || ($valueType === null)) {
             return false;

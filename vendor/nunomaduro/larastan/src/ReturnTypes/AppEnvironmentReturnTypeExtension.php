@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+namespace Larastan\Larastan\ReturnTypes;
 
 use Illuminate\Foundation\Application;
 use PhpParser\Node\Expr\MethodCall;
@@ -30,7 +30,7 @@ class AppEnvironmentReturnTypeExtension implements DynamicMethodReturnTypeExtens
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
+        Scope $scope,
     ): Type {
         if (count($methodCall->getArgs()) === 0) {
             return new StringType();

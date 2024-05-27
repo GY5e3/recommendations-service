@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+namespace Larastan\Larastan\ReturnTypes;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -18,36 +18,25 @@ use PHPStan\Type\TypeCombinator;
 
 use function count;
 
-/**
- * @internal
- */
+/** @internal */
 final class RequestFileExtension implements DynamicMethodReturnTypeExtension
 {
-    /**
-     * {@inheritdoc}
-     */
     public function getClass(): string
     {
         return Request::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
         return $methodReflection->getName() === 'file';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
+        Scope $scope,
     ): Type {
-        $uploadedFileType = new ObjectType(UploadedFile::class);
+        $uploadedFileType      = new ObjectType(UploadedFile::class);
         $uploadedFileArrayType = new ArrayType(new IntegerType(), $uploadedFileType);
 
         if (count($methodCall->getArgs()) === 0) {

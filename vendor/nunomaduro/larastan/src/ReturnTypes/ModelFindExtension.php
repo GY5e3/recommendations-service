@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+namespace Larastan\Larastan\ReturnTypes;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Str;
-use NunoMaduro\Larastan\Support\CollectionHelper;
+use Larastan\Larastan\Support\CollectionHelper;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name;
 use PHPStan\Analyser\Scope;
@@ -26,26 +26,18 @@ use PHPStan\Type\TypeCombinator;
 use function count;
 use function in_array;
 
-/**
- * @internal
- */
+/** @internal */
 final class ModelFindExtension implements DynamicStaticMethodReturnTypeExtension
 {
     public function __construct(private ReflectionProvider $reflectionProvider, private CollectionHelper $collectionHelper)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getClass(): string
     {
         return Model::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isStaticMethodSupported(MethodReflection $methodReflection): bool
     {
         $methodName = $methodReflection->getName();
@@ -54,21 +46,14 @@ final class ModelFindExtension implements DynamicStaticMethodReturnTypeExtension
             return false;
         }
 
-        if (! $this->reflectionProvider->getClass(Builder::class)->hasNativeMethod($methodName) &&
-            ! $this->reflectionProvider->getClass(QueryBuilder::class)->hasNativeMethod($methodName)) {
-            return false;
-        }
-
-        return true;
+        return $this->reflectionProvider->getClass(Builder::class)->hasNativeMethod($methodName) ||
+            $this->reflectionProvider->getClass(QueryBuilder::class)->hasNativeMethod($methodName);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTypeFromStaticMethodCall(
         MethodReflection $methodReflection,
         StaticCall $methodCall,
-        Scope $scope
+        Scope $scope,
     ): Type {
         if (count($methodCall->getArgs()) < 1) {
             return new ErrorType();
@@ -77,7 +62,7 @@ final class ModelFindExtension implements DynamicStaticMethodReturnTypeExtension
         $class = $methodCall->class;
 
         if ($class instanceof Name) {
-            $modelNames = [$class->toString()];
+            $modelNames = [$scope->resolveName($class)];
         } else {
             $type = $scope->getType($class);
 
@@ -97,7 +82,7 @@ final class ModelFindExtension implements DynamicStaticMethodReturnTypeExtension
 
         foreach ($modelNames as $modelName) {
             $returnType = $methodReflection->getVariants()[0]->getReturnType();
-            $argType = $scope->getType($methodCall->getArgs()[0]->value);
+            $argType    = $scope->getType($methodCall->getArgs()[0]->value);
 
             if ($argType->isIterable()->yes()) {
                 if (in_array(Collection::class, $returnType->getReferencedClasses(), true)) {
@@ -115,9 +100,9 @@ final class ModelFindExtension implements DynamicStaticMethodReturnTypeExtension
                 $types[] = TypeCombinator::remove(
                     TypeCombinator::remove(
                         $returnType,
-                        new ArrayType(new MixedType(), new ObjectType($modelName))
+                        new ArrayType(new MixedType(), new ObjectType($modelName)),
                     ),
-                    new ObjectType(Collection::class)
+                    new ObjectType(Collection::class),
                 );
             }
         }

@@ -6,13 +6,15 @@ use Illuminate\Support\Str;
 use Laravel\Octane\Swoole\ServerProcessInspector;
 use Laravel\Octane\Swoole\ServerStateFile;
 use Laravel\Octane\Swoole\SwooleExtension;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\SignalableCommandInterface;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
+#[AsCommand(name: 'octane:swoole')]
 class StartSwooleCommand extends Command implements SignalableCommandInterface
 {
-    use Concerns\InteractsWithServers, Concerns\InteractsWithEnvironmentVariables;
+    use Concerns\InteractsWithEnvironmentVariables, Concerns\InteractsWithServers;
 
     /**
      * The command's signature.
@@ -20,7 +22,7 @@ class StartSwooleCommand extends Command implements SignalableCommandInterface
      * @var string
      */
     public $signature = 'octane:swoole
-                    {--host=127.0.0.1 : The IP address the server should bind to}
+                    {--host= : The IP address the server should bind to}
                     {--port= : The port the server should be available on}
                     {--workers=auto : The number of workers that should be available to handle requests}
                     {--task-workers=auto : The number of task workers that should be available to handle tasks}
@@ -57,6 +59,8 @@ class StartSwooleCommand extends Command implements SignalableCommandInterface
 
             return 1;
         }
+
+        $this->ensurePortIsAvailable();
 
         if ($inspector->serverIsRunning()) {
             $this->error('Server is already running.');

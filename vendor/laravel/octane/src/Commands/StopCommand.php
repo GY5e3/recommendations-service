@@ -2,11 +2,15 @@
 
 namespace Laravel\Octane\Commands;
 
+use Laravel\Octane\FrankenPhp\ServerProcessInspector as FrankenPhpProcessInspector;
+use Laravel\Octane\FrankenPhp\ServerStateFile as FrankenPhpStateFile;
 use Laravel\Octane\RoadRunner\ServerProcessInspector as RoadRunnerServerProcessInspector;
 use Laravel\Octane\RoadRunner\ServerStateFile as RoadRunnerServerStateFile;
 use Laravel\Octane\Swoole\ServerProcessInspector as SwooleServerProcessInspector;
 use Laravel\Octane\Swoole\ServerStateFile as SwooleServerStateFile;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'octane:stop')]
 class StopCommand extends Command
 {
     /**
@@ -35,6 +39,7 @@ class StopCommand extends Command
         return match ($server) {
             'swoole' => $this->stopSwooleServer(),
             'roadrunner' => $this->stopRoadRunnerServer(),
+            'frankenphp' => $this->stopFrankenPhpServer(),
             default => $this->invalidServer($server),
         };
     }
@@ -91,6 +96,32 @@ class StopCommand extends Command
         $inspector->stopServer();
 
         app(RoadRunnerServerStateFile::class)->delete();
+
+        return 0;
+    }
+
+    /**
+     * Stop the FrankenPHP server for Octane.
+     *
+     * @return int
+     */
+    protected function stopFrankenPhpServer()
+    {
+        $inspector = app(FrankenPhpProcessInspector::class);
+
+        if (! $inspector->serverIsRunning()) {
+            app(FrankenPhpStateFile::class)->delete();
+
+            $this->error('FrankenPHP server is not running.');
+
+            return 1;
+        }
+
+        $this->info('Stopping server...');
+
+        $inspector->stopServer();
+
+        app(FrankenPhpStateFile::class)->delete();
 
         return 0;
     }

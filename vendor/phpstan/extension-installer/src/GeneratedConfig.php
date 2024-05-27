@@ -12,7 +12,7 @@ final class GeneratedConfig
 	public const EXTENSIONS = array (
   'nesbot/carbon' => 
   array (
-    'install_path' => '/home/miet/Documents/repos/php-laravel/recommendations-service/vendor/nesbot/carbon',
+    'install_path' => '/home/gy5e3/PhpstormProjects/recommendations-service/vendor/nesbot/carbon',
     'relative_install_path' => '../../../nesbot/carbon',
     'extra' => 
     array (
@@ -21,11 +21,11 @@ final class GeneratedConfig
         0 => 'extension.neon',
       ),
     ),
-    'version' => '2.70.0',
+    'version' => '2.72.3',
   ),
   'nunomaduro/larastan' => 
   array (
-    'install_path' => '/home/miet/Documents/repos/php-laravel/recommendations-service/vendor/nunomaduro/larastan',
+    'install_path' => '/home/gy5e3/PhpstormProjects/recommendations-service/vendor/nunomaduro/larastan',
     'relative_install_path' => '../../../nunomaduro/larastan',
     'extra' => 
     array (
@@ -34,11 +34,24 @@ final class GeneratedConfig
         0 => 'extension.neon',
       ),
     ),
-    'version' => 'v2.6.4',
+    'version' => 'v2.9.6',
+  ),
+  'pestphp/pest' => 
+  array (
+    'install_path' => '/home/gy5e3/PhpstormProjects/recommendations-service/vendor/pestphp/pest',
+    'relative_install_path' => '../../../pestphp/pest',
+    'extra' => 
+    array (
+      'includes' => 
+      array (
+        0 => 'extension.neon',
+      ),
+    ),
+    'version' => 'v2.34.7',
   ),
   'spaze/phpstan-disallowed-calls' => 
   array (
-    'install_path' => '/home/miet/Documents/repos/php-laravel/recommendations-service/vendor/spaze/phpstan-disallowed-calls',
+    'install_path' => '/home/gy5e3/PhpstormProjects/recommendations-service/vendor/spaze/phpstan-disallowed-calls',
     'relative_install_path' => '../../../spaze/phpstan-disallowed-calls',
     'extra' => 
     array (
@@ -47,7 +60,7 @@ final class GeneratedConfig
         0 => 'extension.neon',
       ),
     ),
-    'version' => 'v2.16.0',
+    'version' => 'v2.16.1',
   ),
 );
 

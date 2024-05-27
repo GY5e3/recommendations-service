@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\ReturnTypes;
+namespace Larastan\Larastan\ReturnTypes;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Str;
-use NunoMaduro\Larastan\Methods\BuilderHelper;
-use NunoMaduro\Larastan\Support\CollectionHelper;
+use Larastan\Larastan\Methods\BuilderHelper;
+use Larastan\Larastan\Support\CollectionHelper;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name;
@@ -29,9 +29,7 @@ use function array_intersect;
 use function count;
 use function in_array;
 
-/**
- * @internal
- */
+/** @internal */
 final class ModelDynamicStaticMethodReturnTypeExtension implements DynamicStaticMethodReturnTypeExtension
 {
     public function __construct(
@@ -41,17 +39,11 @@ final class ModelDynamicStaticMethodReturnTypeExtension implements DynamicStatic
     ) {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getClass(): string
     {
         return Model::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isStaticMethodSupported(MethodReflection $methodReflection): bool
     {
         $name = $methodReflection->getName();
@@ -80,13 +72,10 @@ final class ModelDynamicStaticMethodReturnTypeExtension implements DynamicStatic
         return count(array_intersect([EloquentBuilder::class, QueryBuilder::class, Collection::class], $returnType->getReferencedClasses())) > 0;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTypeFromStaticMethodCall(
         MethodReflection $methodReflection,
         StaticCall $methodCall,
-        Scope $scope
+        Scope $scope,
     ): Type {
         $method = $methodReflection->getDeclaringClass()
             ->getMethod($methodReflection->getName(), $scope);
@@ -97,7 +86,7 @@ final class ModelDynamicStaticMethodReturnTypeExtension implements DynamicStatic
             if ($methodCall->class instanceof Name) {
                 $returnType = new GenericObjectType(
                     $this->builderHelper->determineBuilderName($scope->resolveName($methodCall->class)),
-                    [new ObjectType($scope->resolveName($methodCall->class))]
+                    [new ObjectType($scope->resolveName($methodCall->class))],
                 );
             } elseif ($methodCall->class instanceof Expr) {
                 $type = $scope->getType($methodCall->class);
@@ -110,10 +99,11 @@ final class ModelDynamicStaticMethodReturnTypeExtension implements DynamicStatic
                     if (! $this->reflectionProvider->hasClass($className)) {
                         continue;
                     }
+
                     try {
                         $types[] = new GenericObjectType(
                             $this->builderHelper->determineBuilderName($className),
-                            [new ObjectType($className)]
+                            [new ObjectType($className)],
                         );
                     } catch (MissingMethodFromReflectionException) {
                     }

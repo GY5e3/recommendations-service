@@ -2,27 +2,20 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\Methods\Pipes;
+namespace Larastan\Larastan\Methods\Pipes;
 
 use Closure;
 use Illuminate\Support\Manager;
 use InvalidArgumentException;
-use NunoMaduro\Larastan\Concerns;
-use NunoMaduro\Larastan\Contracts\Methods\PassableContract;
-use NunoMaduro\Larastan\Contracts\Methods\Pipes\PipeContract;
+use Larastan\Larastan\Concerns;
+use Larastan\Larastan\Contracts\Methods\PassableContract;
+use Larastan\Larastan\Contracts\Methods\Pipes\PipeContract;
 
-use function get_class;
-
-/**
- * @internal
- */
+/** @internal */
 final class Managers implements PipeContract
 {
     use Concerns\HasContainer;
 
-    /**
-     * {@inheritdoc}
-     */
     public function handle(PassableContract $passable, Closure $next): void
     {
         $classReflection = $passable->getClassReflection();
@@ -33,17 +26,17 @@ final class Managers implements PipeContract
             $driver = null;
 
             $concrete = $this->resolve(
-                $classReflection->getName()
+                $classReflection->getName(),
             );
 
             try {
                 $driver = $concrete->driver();
-            } catch (InvalidArgumentException $exception) {
+            } catch (InvalidArgumentException) {
                 // ..
             }
 
             if ($driver !== null) {
-                $class = get_class($driver);
+                $class = $driver::class;
 
                 if ($class) {
                     $found = $passable->sendToPipeline($class);
@@ -51,8 +44,10 @@ final class Managers implements PipeContract
             }
         }
 
-        if (! $found) {
-            $next($passable);
+        if ($found) {
+            return;
         }
+
+        $next($passable);
     }
 }

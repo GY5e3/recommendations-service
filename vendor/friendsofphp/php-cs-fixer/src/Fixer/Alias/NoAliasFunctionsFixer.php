@@ -156,7 +156,7 @@ final class NoAliasFunctionsFixer extends AbstractFixer implements ConfigurableF
     ];
 
     /**
-     * @var array<string, array<int|string>|string> stores alias (key) - master (value) functions mapping
+     * @var array<string, array{string, int}|string> stores alias (key) - master (value) functions mapping
      */
     private array $aliases = [];
 
@@ -313,7 +313,7 @@ mbereg_search_getregs();
 
         return new FixerConfigurationResolver([
             (new FixerOptionBuilder('sets', $list))
-                ->setAllowedTypes(['array'])
+                ->setAllowedTypes(['string[]'])
                 ->setAllowedValues([new AllowedValueSubset(array_keys($sets))])
                 ->setDefault(['@internal', '@IMAP', '@pg'])
                 ->getOption(),

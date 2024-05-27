@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\Collectors;
+namespace Larastan\Larastan\Collectors;
 
 use Illuminate\Contracts\View\Factory;
 use Illuminate\View\ViewName;
@@ -22,7 +22,7 @@ final class UsedViewMakeCollector implements Collector
     }
 
     /** @param Node\Expr\MethodCall $node */
-    public function processNode(Node $node, Scope $scope): ?string
+    public function processNode(Node $node, Scope $scope): string|null
     {
         $name = $node->name;
 

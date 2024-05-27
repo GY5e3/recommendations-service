@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace NunoMaduro\Larastan\Methods;
+namespace Larastan\Larastan\Methods;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Str;
-use NunoMaduro\Larastan\Reflection\AnnotationScopeMethodParameterReflection;
-use NunoMaduro\Larastan\Reflection\DynamicWhereParameterReflection;
-use NunoMaduro\Larastan\Reflection\EloquentBuilderMethodReflection;
+use Larastan\Larastan\Reflection\AnnotationScopeMethodParameterReflection;
+use Larastan\Larastan\Reflection\DynamicWhereParameterReflection;
+use Larastan\Larastan\Reflection\EloquentBuilderMethodReflection;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\MissingMethodFromReflectionException;
@@ -30,48 +30,52 @@ use function preg_split;
 use function substr;
 use function ucfirst;
 
+use const PREG_SPLIT_DELIM_CAPTURE;
+
 class BuilderHelper
 {
-    /** @var string[] */
     public const MODEL_RETRIEVAL_METHODS = ['first', 'find', 'findMany', 'findOrFail', 'firstOrFail', 'sole'];
 
-    /** @var string[] */
-    public const MODEL_CREATION_METHODS = ['make', 'create', 'forceCreate', 'findOrNew', 'firstOrNew', 'updateOrCreate', 'firstOrCreate'];
+    public const MODEL_CREATION_METHODS = ['make', 'create', 'forceCreate', 'findOrNew', 'firstOrNew', 'updateOrCreate', 'firstOrCreate', 'createOrFirst'];
 
     /**
      * The methods that should be returned from query builder.
      *
      * @var string[]
      */
-    public $passthru = [
-        'average', 'avg',
+    public array $passthru = [
+        'average',
+        'avg',
         'count',
-        'dd', 'dump',
-        'doesntExist', 'exists',
-        'getBindings', 'getConnection', 'getGrammar',
-        'insert', 'insertGetId', 'insertOrIgnore', 'insertUsing',
-        'max', 'min',
+        'dd',
+        'dump',
+        'doesntExist',
+        'exists',
+        'getBindings',
+        'getConnection',
+        'getGrammar',
+        'insert',
+        'insertGetId',
+        'insertOrIgnore',
+        'insertUsing',
+        'max',
+        'min',
         'raw',
         'sum',
         'toSql',
+        'toRawSql',
+        'dumpRawSql',
+        'ddRawSql',
     ];
 
-    /** @var ReflectionProvider */
-    private $reflectionProvider;
-
-    /** @var bool */
-    private $checkProperties;
-
-    public function __construct(ReflectionProvider $reflectionProvider, bool $checkProperties, private MacroMethodsClassReflectionExtension $macroMethodsClassReflectionExtension)
+    public function __construct(private ReflectionProvider $reflectionProvider, private bool $checkProperties, private MacroMethodsClassReflectionExtension $macroMethodsClassReflectionExtension)
     {
-        $this->reflectionProvider = $reflectionProvider;
-        $this->checkProperties = $checkProperties;
     }
 
     public function dynamicWhere(
         string $methodName,
-        Type $returnObject
-    ): ?EloquentBuilderMethodReflection {
+        Type $returnObject,
+    ): EloquentBuilderMethodReflection|null {
         if (! Str::startsWith($methodName, 'where')) {
             return null;
         }
@@ -89,16 +93,21 @@ class BuilderHelper
                 $finder = substr($methodName, 5);
 
                 $segments = preg_split(
-                    '/(And|Or)(?=[A-Z])/', $finder, -1, PREG_SPLIT_DELIM_CAPTURE
+                    '/(And|Or)(?=[A-Z])/',
+                    $finder,
+                    -1,
+                    PREG_SPLIT_DELIM_CAPTURE,
                 );
 
                 if ($segments !== false) {
                     $trinaryLogic = TrinaryLogic::createYes();
 
                     foreach ($segments as $segment) {
-                        if ($segment !== 'And' && $segment !== 'Or') {
-                            $trinaryLogic = $trinaryLogic->and($modelType->hasProperty(Str::snake($segment)));
+                        if ($segment === 'And' || $segment === 'Or') {
+                            continue;
                         }
+
+                        $trinaryLogic = $trinaryLogic->and($modelType->hasProperty(Str::snake($segment)));
                     }
 
                     if (! $trinaryLogic->yes()) {
@@ -115,9 +124,9 @@ class BuilderHelper
         return new EloquentBuilderMethodReflection(
             $methodName,
             $classReflection,
-            [new DynamicWhereParameterReflection],
+            [new DynamicWhereParameterReflection()],
             $returnObject,
-            true
+            true,
         );
     }
 
@@ -126,15 +135,12 @@ class BuilderHelper
      * Does not handle the case where $methodName exists in `EloquentBuilder`,
      * that should be checked by caller before calling this method.
      *
-     * @param  ClassReflection  $eloquentBuilder  Can be `EloquentBuilder` or a custom builder extending it.
-     * @param  string  $methodName
-     * @param  ClassReflection  $model
-     * @return MethodReflection|null
+     * @param  ClassReflection $eloquentBuilder Can be `EloquentBuilder` or a custom builder extending it.
      *
      * @throws MissingMethodFromReflectionException
      * @throws ShouldNotHappenException
      */
-    public function searchOnEloquentBuilder(ClassReflection $eloquentBuilder, string $methodName, ClassReflection $model): ?MethodReflection
+    public function searchOnEloquentBuilder(ClassReflection $eloquentBuilder, string $methodName, ClassReflection $model): MethodReflection|null
     {
         // Check for macros first
         if ($this->macroMethodsClassReflectionExtension->hasMethod($eloquentBuilder, $methodName)) {
@@ -142,8 +148,8 @@ class BuilderHelper
         }
 
         // Check for local query scopes
-        if (array_key_exists('scope'.ucfirst($methodName), $model->getMethodTags())) {
-            $methodTag = $model->getMethodTags()['scope'.ucfirst($methodName)];
+        if (array_key_exists('scope' . ucfirst($methodName), $model->getMethodTags())) {
+            $methodTag = $model->getMethodTags()['scope' . ucfirst($methodName)];
 
             $parameters = [];
             foreach ($methodTag->getParameters() as $parameterName => $parameterTag) {
@@ -155,15 +161,15 @@ class BuilderHelper
             array_shift($parameters);
 
             return new EloquentBuilderMethodReflection(
-                'scope'.ucfirst($methodName),
+                'scope' . ucfirst($methodName),
                 $model,
                 $parameters,
-                $methodTag->getReturnType()
+                $methodTag->getReturnType(),
             );
         }
 
-        if ($model->hasNativeMethod('scope'.ucfirst($methodName))) {
-            $methodReflection = $model->getNativeMethod('scope'.ucfirst($methodName));
+        if ($model->hasNativeMethod('scope' . ucfirst($methodName))) {
+            $methodReflection   = $model->getNativeMethod('scope' . ucfirst($methodName));
             $parametersAcceptor = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants());
 
             $parameters = $parametersAcceptor->getParameters();
@@ -174,11 +180,11 @@ class BuilderHelper
             $returnType = $parametersAcceptor->getReturnType();
 
             return new EloquentBuilderMethodReflection(
-                'scope'.ucfirst($methodName),
+                'scope' . ucfirst($methodName),
                 $methodReflection->getDeclaringClass(),
                 $parameters,
                 $returnType,
-                $parametersAcceptor->isVariadic()
+                $parametersAcceptor->isVariadic(),
             );
         }
 
@@ -192,13 +198,15 @@ class BuilderHelper
             return $queryBuilderReflection->getNativeMethod($methodName);
         }
 
+        // Check for query builder macros
+        if ($this->macroMethodsClassReflectionExtension->hasMethod($queryBuilderReflection, $methodName)) {
+            return $this->macroMethodsClassReflectionExtension->getMethod($queryBuilderReflection, $methodName);
+        }
+
         return $this->dynamicWhere($methodName, new GenericObjectType($eloquentBuilder->getName(), [new ObjectType($model->getName())]));
     }
 
     /**
-     * @param  string  $modelClassName
-     * @return string
-     *
      * @throws MissingMethodFromReflectionException
      * @throws ShouldNotHappenException
      */
